@@ -74,8 +74,9 @@ png(filename = "plot3.png",
 baltpy %>% ggplot() +
         geom_line(aes(baltpy$year, baltpy$sum, col=type)) +
         labs(
-                title = "Yearly PM2.5 Emissions Baltimore City, MD by type of source",
-                x = 'Year',
+                title = "Yearly PM2.5 Emissions Baltimore City, MD",
+                subtitle = "by type of source",
+                x = "Year",
                 y = "PM2.5 emitted (in 1000 tons)"
         ) +
         scale_color_discrete(name="Type of Source") + 
@@ -112,6 +113,64 @@ with(ccrspy,axis(1, seq(min(year),max(year),1)))
 dev.off()
 
 #5
+# How have emissions from motor vehicle sources changed from 1999–2008 in Baltimore City?
+library(dplyr)
+library(ggplot2)
+data <- readRDS('summarySCC_PM25.rds')
+poll <- readRDS('Source_Classification_Code.rds')
+mrg <- merge(data, poll[,'Short.Name'], by='SCC')
 
+mc <- mrg %>% filter(grepl("motor vehicle", Short.Name, ignore.case = TRUE) & fips == "24510")
+
+mcpy <- mc %>%
+        group_by(year) %>%
+        summarise(sum = sum(Emissions/1000))
+
+png(filename = "plot5.png", 
+    width = 480, 
+    height = 480)
+
+mcpy %>% ggplot() +
+        geom_line(aes(year, sum)) +
+        labs(
+            title = "Yearly PM2.5 Emissions Baltimore City, MD",
+            subtitle = "from Motor Vehicles",
+            x = "Year",
+            y = "PM2.5 emitted (in 1000 tons)"
+        ) +
+        xlim(1999, 2008)
+dev.off()
+
+#6
+# Compare emissions from motor vehicle sources in Baltimore City with emissions 
+# from motor vehicle sources in Los Angeles County, California (fips == "06037")
+# Which city has seen greater changes over time in motor vehicle emissions?
+library(dplyr)
+library(ggplot2)
+data <- readRDS('summarySCC_PM25.rds')
+poll <- readRDS('Source_Classification_Code.rds')
+mrg <- merge(data, poll[,'Short.Name'], by='SCC')
+
+mc <- mrg %>% filter(grepl("motor vehicle", Short.Name, ignore.case = TRUE) & 
+                    (fips == "24510" | fips == "06037"))
+
+mcpy <- mc %>%
+    group_by(year, fips) %>%
+    summarise(sum = sum(Emissions/1000))
+
+png(filename = "plot6.png", 
+    width = 480, 
+    height = 480)
+
+mcpy %>% ggplot() +
+    geom_line(aes(year, sum, col=fips)) +
+    labs(
+        title = "Yearly PM2.5 Emissions Baltimore City, MD",
+        subtitle = "from Motor Vehicles",
+        x = "Year",
+        y = "PM2.5 emitted (in 1000 tons)"
+    ) +
+    xlim(1999, 2008)
+dev.off()
 
 
